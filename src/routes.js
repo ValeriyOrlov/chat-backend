@@ -56,6 +56,28 @@ export default (app, defaultState = {}) => {
       app.io.emit('newMessage', messageWithId);
     });
 
+    socket.on('removeMessage', ({ id }, acknowledge = _.noop) => {
+      const messageId = Number(id);
+      // @ts-ignore
+      state.messages = state.messages.filter((m) => m.id !== messageId);
+      const data = { id: messageId };
+
+      acknowledge({ status: 'ok' });
+      app.io.emit('removeMessage', data);
+    })
+
+    socket.on('editMessage', ({ id, body }, acknowledge = _.noop) => {
+      const messageId = Number(id);
+      // @ts-ignore
+      const message = state.messages.find((m) => m.id === messageId);
+      if (!message) return;
+      // @ts-ignore
+      message.body = body;
+
+      acknowledge({ status: 'ok' });
+      app.io.emit('editMessage', message);
+    });
+
     socket.on('newChannel', (channel, acknowledge = _.noop) => {
       const channelWithId = {
         ...channel,
